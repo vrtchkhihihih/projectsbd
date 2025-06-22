@@ -1,15 +1,31 @@
 WITH pop AS (
-    SELECT pizzeria.name, gender FROM person_order
-        JOIN person ON person_id = person.id
-        JOIN menu ON menu_id = menu.id
-        JOIN pizzeria ON menu.pizzeria_id = pizzeria.id),
-     po_male AS (SELECT name FROM pop WHERE gender = 'male'),
-     po_female AS (SELECT name FROM pop WHERE gender = 'female')
-
+    SELECT p.name, per.gender
+    FROM person_order po
+    JOIN person per ON po.person_id = per.id
+    JOIN menu m ON po.menu_id = m.id
+    JOIN pizzeria p ON m.pizzeria_id = p.id
+),
+pizzerias_male_only AS (
+  SELECT name
+  FROM pop
+  WHERE gender = 'male'
+  EXCEPT
+  SELECT name
+  FROM pop
+  WHERE gender = 'female'
+),
+pizzerias_female_only AS (
+  SELECT name
+  FROM pop
+  WHERE gender = 'female'
+  EXCEPT
+  SELECT name
+  FROM pop
+  WHERE gender = 'male'
+)
 SELECT name AS pizzeria_name
-FROM (
-         (SELECT * FROM po_male EXCEPT SELECT * FROM po_female)
-         UNION
-         (SELECT * FROM po_female EXCEPT SELECT * FROM po_male)
-     ) AS u
+FROM pizzerias_male_only
+UNION
+SELECT name
+FROM pizzerias_female_only
 ORDER BY pizzeria_name;
